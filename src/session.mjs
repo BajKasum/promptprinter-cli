@@ -115,9 +115,11 @@ let userSid;
 /**
  * Unter Windows gibt es kein `0700`: der Ordner erbt die Rechte von %APPDATA%, und die lassen auf manchen
  * Rechnern weitere Konten lesen (gemessen: zwei lokale Konten der Sandbox eines KI-Agenten). Deshalb keine
- * geerbten Rechte, nur dieser Nutzer; die Dateien darin erben genau das. Bei jedem Speichern, damit auch ein
- * älterer Ordner es bekommt. Scheitert es (ein Laufwerk ohne Zugriffslisten), bleiben die geerbten Rechte,
- * wie ohne diesen Schritt: eine Anmeldung, die an einem Werkzeug scheitert, schützt niemanden.
+ * geerbten Rechte, nur dieser Nutzer; die Dateien darin erben genau das. Ausdrückliche Einträge bleiben: die gibt
+ * Windows einem neuen Ordner nur, wo nichts zu erben ist, und dann für SYSTEM und Administratoren, die ohnehin an
+ * jede Datei kommen. Bei jedem Speichern, damit auch ein älterer Ordner es bekommt. Scheitert es (ein Laufwerk
+ * ohne Zugriffslisten), bleiben die geerbten Rechte wie ohne diesen Schritt: eine Anmeldung, die an einem
+ * Werkzeug scheitert, schützt niemanden.
  */
 async function restrictToUser(dir) {
   // Mit festem Pfad: in Git Bash steht ein anderes `whoami` vorn im PATH, das /user nicht kennt.
