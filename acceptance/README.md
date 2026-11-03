@@ -1,6 +1,6 @@
 # Acceptance run
 
-The real program against a local PromptPrinter server, confirmed in the real `/cli` page. Not part of `npm test` and not in the npm package: it needs the main repository (not public), its local Supabase stack and Playwright.
+The real program against a local PromptPrinter server, confirmed in the real `/cli` page. Not part of `npm test` and not in the npm package: it needs a checkout of the main repository ([BajKasum/PromptPrinter](https://github.com/BajKasum/PromptPrinter), all rights reserved), its local Supabase stack and Playwright.
 
 ```bash
 node acceptance/run.mjs ../PromptPrinter e2e/cli-login.spec.ts e2e/cli-me.spec.ts e2e/mfa.spec.ts
