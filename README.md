@@ -1,3 +1,9 @@
+<div align="center">
+
+<img src="assets/promptprinter-cli-logo.png" alt="PromptPrinter /cli (promptprinter-cli)" width="620" />
+
+</div>
+
 # PromptPrinter in your terminal
 
 Tell Finn what you want, answer one short question, get one finished prompt that works in any AI. This is the terminal client of [PromptPrinter](https://promptprinter.app): the same account, the same Finn, your conversations also show up in the browser.
