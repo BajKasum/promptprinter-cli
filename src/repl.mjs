@@ -199,12 +199,13 @@ export function runRepl(ctx) {
     const space = line.search(/\s/);
     const name = (space === -1 ? line : line.slice(0, space)).toLowerCase();
     const rest = space === -1 ? "" : line.slice(space + 1).trim();
+    // Vor dem switch: mit Kontext beginnt das neue Gespräch erst nach dem "j".
+    if (name === "/pp" && CONTEXT_FLAG.test(rest)) {
+      await ppWithContext(rest.replace(CONTEXT_FLAG, "").trim());
+      return;
+    }
     switch (name) {
       case "/pp":
-        if (CONTEXT_FLAG.test(rest)) {
-          await ppWithContext(rest.replace(CONTEXT_FLAG, "").trim());
-          return;
-        }
         conversation.reset();
         lastPrompt = null;
         if (rest) await send(rest);
