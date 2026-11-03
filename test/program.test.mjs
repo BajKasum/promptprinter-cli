@@ -21,8 +21,8 @@ beforeEach(async () => {
 });
 afterEach(async () => {
   await stub.close();
-  rmSync(dir, { recursive: true, force: true });
-  rmSync(cwd, { recursive: true, force: true });
+  rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  rmSync(cwd, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 function run(args, lines = [], extraEnv = {}) {
@@ -44,6 +44,8 @@ function run(args, lines = [], extraEnv = {}) {
     child.stderr.on("data", (d) => (out += d));
     child.on("error", reject);
     child.on("close", (code) => resolve({ code, out }));
+    // --version liest nichts und ist oft schon weg, bevor die Eingabe ankommt.
+    child.stdin.on("error", () => {});
     child.stdin.end(lines.length ? `${lines.join("\n")}\n` : "");
   });
 }
