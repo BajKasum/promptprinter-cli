@@ -29,6 +29,24 @@ On first start the program shows a code. Open the address it shows, sign in if n
 
 A Free account chats with its own AI key, which you add once [in the browser](https://promptprinter.app/settings). The terminal never sees that key.
 
+## Install
+
+There is no npm package yet. Until this line changes, a package called `promptprinter` on npm is not from this project.
+
+<!-- Ab der ersten Veröffentlichung sichtbar machen und den Satz oben ersetzen (CLAUDE.md, "Veröffentlichung"):
+
+Needs Node 22 or newer.
+
+```bash
+npm install -g promptprinter
+promptprinter
+```
+
+Try it without installing: `npx promptprinter`. Update with `npm install -g promptprinter@latest`. To remove it, first `promptprinter logout`, then `npm uninstall -g promptprinter`.
+
+From the second version on, each one is published from GitHub Actions with [provenance](https://docs.npmjs.com/generating-provenance-statements): the npm page names the commit and the workflow it was built from.
+-->
+
 ## Commands
 
 | In the program | |
@@ -69,5 +87,7 @@ npm run check     # syntax
 npm run mutation  # breaks each safeguard, the tests must notice
 npm run contract  # compares the server's interface with the pinned version
 ```
+
+The real program against a local server, confirmed in the browser, needs the main repository and runs outside `npm test`: [acceptance/README.md](acceptance/README.md).
 
 MIT, see [LICENSE](LICENSE). Security reports: [SECURITY.md](SECURITY.md).
