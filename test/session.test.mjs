@@ -59,11 +59,14 @@ test("unter Windows liest ausser dem Nutzer niemand Ordner und Datei, nichts ist
     return readFileSync(file, "utf16le").split(/\r?\n/)[1];
   };
   const trustees = (text) => new Set([...text.matchAll(/\(A;[^;]*;[^;]*;;;([^)]+)\)/g)].map((ace) => ace[1]));
-  const allowed = new Set([me, "SY", "BA"]);
+  // Das eingebaute Administratorkonto (RID 500, so auf den Rechnern der CI) schreibt SDDL als LA.
+  const self = /-500$/.test(me) ? "LA" : me;
+  const allowed = new Set([self, "SY", "BA"]);
   for (const path of [join(dir, "cfg"), s.path]) {
-    const found = trustees(sddl(path));
-    assert.ok(found.has(me), path);
-    assert.deepEqual([...found].filter((sid) => !allowed.has(sid)), [], path);
+    const text = sddl(path);
+    const found = trustees(text);
+    assert.ok(found.has(self), `${path}: ${text}`);
+    assert.deepEqual([...found].filter((sid) => !allowed.has(sid)), [], `${path}: ${text}`);
   }
   assert.match(sddl(join(dir, "cfg")), /^D:P/, "der Ordner erbt nichts mehr");
 });
