@@ -38,7 +38,7 @@ const mutations = [
   ["src/system.mjs", "Speichern überschreibt", '{ flag: "wx" });\n      return { kind: "saved", path };', '{ flag: "w" });\n      return { kind: "saved", path };'],
   ["src/system.mjs", "Speichern ohne Kennzeichnung", "`${AI_GENERATED_MARKER}\\n\\n${prompt}\\n`", "`${prompt}\\n`"],
   ["src/system.mjs", "Browser öffnet alles", 'if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return false;', ""],
-  ["src/system.mjs", "Windows ohne BOM", "Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(text, \"utf16le\")])", 'Buffer.from(text, "utf16le")'],
+  ["src/system.mjs", "Zwischenablage nicht als UTF-8", 'pipeTo(candidate, Buffer.from(text, "utf8"), spawn)', 'pipeTo(candidate, Buffer.from(text, "utf16le"), spawn)'],
   ["src/render.mjs", "Abschluss am Zeilenende übersehen", 'if (run >= length && char === "`") {', "if (false) {"],
   ["src/render.mjs", "offener Block bleibt offen", "if (this.open) this.closeFrame();", ""],
   ["src/extract-prompt.mjs", "erster statt letzter Block", "text[text.length - 1].body", "text[0].body"],
