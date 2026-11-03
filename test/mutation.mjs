@@ -1,10 +1,12 @@
 // Mutationstests (Hausregel): macht je eine Schranke kaputt, lässt die Tests laufen und stellt die Datei
 // wieder her. Aufruf: npm run mutation [Teil des Namens]. Jede Zeile muss "erkannt" sein. Dateirechte
-// gibt es unter Windows nicht, diese Zeilen laufen nur anderswo (in der CI unter Linux).
+// nach POSIX gibt es unter Windows nicht, diese Zeilen laufen nur anderswo (in der CI unter Linux); die
+// Zugriffslisten von Windows nur dort (in der CI: npm run mutation -- "unter Windows").
 import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 
 const POSIX = "posix";
+const WINDOWS = "win32";
 const filter = process.argv[2];
 const mutations = [
   ["src/text.mjs", "Steuerfolgen bleiben", '.replace(ESCAPE_SEQUENCE, "")', ""],
@@ -22,7 +24,9 @@ const mutations = [
   ["src/config.mjs", "fremder Host zählt als lokal", 'url.hostname.endsWith(".localhost")', 'url.hostname.includes("localhost")'],
   ["src/session.mjs", "Sitzung für jeden Server", "parsed.server === server ? parsed : null", "parsed"],
   ["src/session.mjs", "Temp-Datei für alle lesbar", 'open(tmp, "wx", 0o600)', 'open(tmp, "wx", 0o644)', POSIX],
-  ["src/session.mjs", "Ordner für alle lesbar", "await mkdir(dir, { recursive: true, mode: 0o700 });\n    const tmp", "await mkdir(dir, { recursive: true });\n    const tmp", POSIX],
+  ["src/session.mjs", "Ordner für alle lesbar", "await mkdir(dir, { recursive: true, mode: 0o700 });\n    if (process.platform", "await mkdir(dir, { recursive: true });\n    if (process.platform", POSIX],
+  ["src/session.mjs", "Ordner unter Windows mit geerbten Rechten", 'if (process.platform === "win32") await restrictToUser(dir);', "", WINDOWS],
+  ["src/session.mjs", "Zugriffsliste unter Windows behält Geerbtes", '"/inheritance:r", ', "", WINDOWS],
   ["src/session.mjs", "neues Token nicht gespeichert", "return (await store.save(refreshed.session)).access_token;", "return refreshed.session.access_token;"],
   ["src/session.mjs", "abgelehntes Token bleibt liegen", "if (err instanceof ApiError && err.status === 401) {\n          await store.clear();", "if (err instanceof ApiError && err.status === 401) {"],
   ["src/session.mjs", "Ausfall löscht die Sitzung", "if (err instanceof ApiError && err.status === 401) {\n          await store.clear();", "if (err instanceof ApiError) {\n          await store.clear();"],
@@ -59,7 +63,7 @@ const mutations = [
 let missed = 0;
 for (const [file, name, from, to, only] of mutations) {
   if (filter && !name.includes(filter)) continue;
-  if (only === POSIX && process.platform === "win32") {
+  if ((only === POSIX && process.platform === "win32") || (only === WINDOWS && process.platform !== "win32")) {
     console.log(`übersprungen  ${file}: ${name}`);
     continue;
   }

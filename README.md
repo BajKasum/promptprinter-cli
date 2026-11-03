@@ -47,7 +47,7 @@ From the shell: `promptprinter login`, `logout`, `whoami`, `--version`, `--help`
 
 ## What it stores and sends
 
-- **On your computer:** one file, `session.json`, in `%APPDATA%\promptprinter` (Windows) or `~/.config/promptprinter`. It holds your sign-in and is readable only by you on Linux and macOS (`0600`); on Windows it relies on the permissions of your user folder. Anyone who can read this file can act as you until the session is revoked. It holds no AI provider key.
+- **On your computer:** one file, `session.json`, in `%APPDATA%\promptprinter` (Windows) or `~/.config/promptprinter`. It holds your sign-in and is readable only by you on Linux and macOS (`0600`); on Windows only your own account has access to its folder (no inherited permissions). Anyone who can read this file can act as you until the session is revoked. It holds no AI provider key.
 - **To PromptPrinter:** your computer's name when signing in (shown on the confirmation page), then what you type. The server stores each conversation like any chat in the browser and sends it to the AI provider of your account. No telemetry.
 - `promptprinter logout` ends this one session. Signing out in the browser ends all of them.
 

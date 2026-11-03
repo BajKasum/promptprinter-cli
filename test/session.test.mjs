@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -41,6 +42,21 @@ test("die Datei ist nur für den Nutzer lesbar", { skip: process.platform === "w
   assert.equal(statSync(join(dir, "cfg")).mode & 0o777, 0o700);
   await s.save(record("b", "r2"));
   assert.equal(statSync(s.path).mode & 0o777, 0o600);
+});
+
+test("unter Windows lesen Ordner und Datei nur der Nutzer selbst, nichts ist geerbt", { skip: process.platform !== "win32" }, async () => {
+  const s = store();
+  await s.save(record("a", "r"));
+  const system32 = join(process.env.SystemRoot ?? "C:\\Windows", "System32");
+  const me = execFileSync(join(system32, "whoami.exe"), { encoding: "utf8" }).trim().toLowerCase();
+  // icacls nennt je Zeile einen Eintrag "Konto:(Rechte)", die erste Zeile beginnt mit dem Pfad.
+  const entries = (path) =>
+    execFileSync(join(system32, "icacls.exe"), [path], { encoding: "utf8" })
+      .split(/\r?\n/)
+      .filter((line) => line.includes(":("))
+      .map((line) => line.replace(path, "").trim().toLowerCase());
+  assert.deepEqual(entries(join(dir, "cfg")), [`${me}:(oi)(ci)(f)`]);
+  assert.deepEqual(entries(s.path), [`${me}:(i)(f)`]);
 });
 
 test("eine Sitzung gilt nur für ihren Server", async () => {
