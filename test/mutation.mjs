@@ -61,6 +61,20 @@ const mutations = [
   ["src/repl.mjs", "eingefügte Zeilen einzeln", 'queue.push(pasted.join("\\n"));', "queue.push(...pasted);"],
   ["src/repl.mjs", "Befehl im eingefügten Text ausgeführt", 'trimmed.startsWith("/") && !trimmed.includes("\\n")', 'trimmed.startsWith("/")'],
   ["src/repl.mjs", "Wartehinweis bleibt stehen", "write(term.clearLine);", ""],
+  ["src/repl.mjs", "Kontext aus der Pipe gesammelt", 'if (!term.isTTY || !input.isTTY) return { refusal: t("kontextNoTerminal") };', ""],
+  ["src/repl.mjs", "Kontext: nur die Ausgabe als Terminal geprüft", "!term.isTTY || !input.isTTY", "!term.isTTY"],
+  ["src/repl.mjs", "Kontext ohne Key gesammelt", "if (me.needsOwnKey || me.needsConsent) {", "if (false) {"],
+  ["src/repl.mjs", "Kontext: jede Antwort sendet", 'if (answer?.trim().toLowerCase() !== t("kontextYes")) {', "if (answer === null) {"],
+  ["src/repl.mjs", "Kontext: Strg+C an der Frage beendet das Programm", "turn = new AbortController();\n      const { signal } = turn;", "const { signal } = new AbortController();"],
+  ["src/repl.mjs", "Kontext: abgebrochene Frage nimmt die nächste Zeile", "rl.question(query, { signal }, finish);", "rl.question(query, finish);"],
+  ["src/repl.mjs", "Kontext: Vorschau ohne die Nachricht", "for (const part of wrapLine(line, width)) say(", "for (const part of []) say("],
+  ["src/repl.mjs", "Kontext: falscher Empfänger", 't(me.hasOwnKey ? "kontextToOwn" : "kontextToServer")', 't("kontextToOwn")'],
+  ["src/repl.mjs", "Kontext: Chat-Verlauf verschwiegen", 'say(t("kontextStored"));', ""],
+  ["src/project-context.mjs", "Kontext ungeschwärzt", '.split("\\n").map(redactText).join("\\n")', ""],
+  ["src/project-context.mjs", "Kontext unbereinigt", "const clean = (text) => sanitize(text).split", "const clean = (text) => text.split"],
+  ["src/project-context.mjs", "Kontext erst geschwärzt, dann bereinigt", 'sanitize(text).split("\\n").map(redactText).join("\\n")', 'text.split("\\n").map(redactText).map(sanitize).join("\\n")'],
+  ["src/project-context.mjs", "Kontext ohne Grenze", "const budget = max - head.length;", "const budget = max;"],
+  ["src/project-context.mjs", "Stummel statt Absage", 'if (budget < MIN_CONTEXT_CHARS) return { kind: "noRoom" };', ""],
 ];
 
 let missed = 0;

@@ -52,6 +52,7 @@ From the second version on, each one is published from GitHub Actions with [prov
 | In the program | |
 |---|---|
 | `/pp <idea>` | new prompt: Finn asks briefly, then prints it |
+| `/pp --kontext <idea>` | the same, with context from the current folder: shows the whole message first and sends it only after you type `j` (`y` in English) |
 | `/new` | new conversation |
 | `/copy` | copy the latest prompt |
 | `/save [file]` | save the latest prompt as Markdown, never overwrites |
@@ -67,6 +68,7 @@ From the shell: `promptprinter login`, `logout`, `whoami`, `--version`, `--help`
 
 - **On your computer:** one file, `session.json`, in `%APPDATA%\promptprinter` (Windows) or `~/.config/promptprinter`. It holds your sign-in and is readable only by you on Linux and macOS (`0600`); on Windows only your own account has access to its folder (no inherited permissions). Anyone who can read this file can act as you until the session is revoked. It holds no AI provider key.
 - **To PromptPrinter:** your computer's name when signing in (shown on the confirmation page), then what you type. The server stores each conversation like any chat in the browser and sends it to the AI provider of your account. No telemetry.
+- **With `/pp --kontext`, and only then:** the program reads the folder you started it in. It collects the git state (branch, changed files, diff summary, last commit subjects), project facts (dependencies, scripts, folder structure, names of rule files like `CLAUDE.md`) and up to three matching lines per file from at most ten files, searched with words from your idea. Files like `.env`, keys and credentials are named but never read. Known secret patterns (keys, tokens, passwords in URLs and assignments, private keys) are replaced by `[redacted: …]`, and the context is cut so that idea plus context stay within 8000 characters; your idea is never cut. Before anything leaves your computer you see the whole message, who receives it (PromptPrinter and your own AI provider, or Z.ai in Singapore through the server key) and that it stays in your chat history. Only `j` sends; anything else, `Ctrl+C` or input from a pipe sends nothing. Once sent, the context is part of the conversation like any message: visible in the browser and sent to the model again with later messages of that conversation. Redaction catches known patterns, not every secret, so read the preview.
 - `promptprinter logout` ends this one session. Signing out in the browser ends all of them.
 
 ## Settings
