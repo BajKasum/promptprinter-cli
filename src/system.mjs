@@ -4,7 +4,8 @@ import { basename, extname, resolve } from "node:path";
 
 // Dieselbe Markierung wie beim Markdown-Download im Web (shared/lib/ai-marker.ts im Haupt-Repo).
 const AI_GENERATED_MARKER = "<!-- ai-generated: true; generator: PromptPrinter (Finn) -->";
-const CLIPBOARD_TIMEOUT_MS = 10_000;
+// Grosszügig: ein kalter Start von PowerShell dauerte auf einem CI-Rechner über zehn Sekunden.
+const CLIPBOARD_TIMEOUT_MS = 30_000;
 
 // Windows über PowerShell statt clip.exe: clip behält ein Byte-Order-Mark als unsichtbares Zeichen im
 // Prompt und errät ohne es die Kodierung falsch (ein einzelnes "ä" kommt kaputt an). Der Text steht nie im
