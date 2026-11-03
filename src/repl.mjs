@@ -3,12 +3,15 @@ import { describeAccount, fetchAccount, signOut } from "./account.mjs";
 import { createConversation, MAX_USER_MESSAGE_CHARS, runTurn } from "./chat.mjs";
 import { describeError } from "./errors.mjs";
 import { extractPrompt } from "./extract-prompt.mjs";
+import { buildContextMessage } from "./project-context.mjs";
 import { ReplyRenderer } from "./render.mjs";
 import { NotLoggedInError } from "./session.mjs";
+import { sanitize, wrapLine } from "./text.mjs";
 
 // Eingefügter Text kommt als viele Zeilen in einem Atemzug. Im Terminal werden sie zu einer Nachricht
 // zusammengefasst, sonst ginge jede Zeile einzeln an Finn. Aus einer Pipe zählt jede Zeile einzeln.
 const PASTE_WINDOW_MS = 30;
+const CONTEXT_FLAG = /^--(?:kontext|context)(?:\s+|$)/i;
 
 /**
  * Die Eingabezeile. Kennt die Befehle und zeichnet die Züge, die Arbeit steckt in den anderen Modulen.
@@ -16,6 +19,7 @@ const PASTE_WINDOW_MS = 30;
  */
 export function runRepl(ctx) {
   const { input, output, term, t, api, auth, store, login, copy, save } = ctx;
+  const cwd = ctx.cwd ?? process.cwd();
   const write = (text) => output.write(text);
   const say = (text) => write(`${text}\n`);
   const conversation = createConversation();
@@ -109,12 +113,98 @@ export function runRepl(ctx) {
     say(t({ none: "notLoggedIn", out: "loggedOut", local: "logoutLocalOnly" }[result]));
   }
 
+  // Eine Frage an der Eingabezeile. Strg+C (über `turn`) und das Ende der Eingabe gelten als Nein.
+  function ask(query) {
+    if (closed) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      turn = new AbortController();
+      const { signal } = turn;
+      const finish = (answer) => {
+        rl.removeListener("close", onClose);
+        signal.removeEventListener("abort", onAbort);
+        turn = null;
+        resolve(answer);
+      };
+      const onClose = () => finish(null);
+      const onAbort = () => finish(null);
+      rl.once("close", onClose);
+      signal.addEventListener("abort", onAbort, { once: true });
+      rl.question(query, { signal }, finish);
+    });
+  }
+
+  function showPreview(built, me) {
+    const border = term.unicode ? { top: "┌─", side: "│", bottom: "└─" } : { top: "+-", side: "|", bottom: "+-" };
+    const width = term.wrapWidth - 2;
+    say(t("kontextPreview"));
+    say(term.dim(`${border.top} ${t("kontextMessage", { length: built.message.length, max: MAX_USER_MESSAGE_CHARS })}`));
+    for (const line of built.message.split("\n")) {
+      for (const part of wrapLine(line, width)) say(`${term.dim(border.side)} ${part}`);
+    }
+    say(term.dim(border.bottom));
+    say(t("kontextSummary", { files: built.files, lines: built.lines, redacted: built.redacted, denied: built.denied }));
+    say(t(me.hasOwnKey ? "kontextToOwn" : "kontextToServer"));
+    say(t("kontextStored"));
+    say(term.dim(t("kontextWarning")));
+  }
+
+  /** Empfänger und Nachricht für `/pp --kontext`, oder eine Absage als Text. Sendet nichts. */
+  async function prepareContext(idea) {
+    if (!idea) return { refusal: t("kontextAsk") };
+    if (!term.isTTY || !input.isTTY) return { refusal: t("kontextNoTerminal") };
+    if (idea.length > MAX_USER_MESSAGE_CHARS) {
+      return { refusal: t("tooLong", { length: idea.length, max: MAX_USER_MESSAGE_CHARS }) };
+    }
+    let me;
+    try {
+      me = await fetchAccount({ auth, api });
+    } catch (err) {
+      return { refusal: err instanceof NotLoggedInError ? t("notLoggedIn") : describeError(err, { t, server: api.server }) };
+    }
+    if (!me) return { refusal: t("kontextNoRecipient") };
+    if (me.needsOwnKey || me.needsConsent) {
+      return { refusal: describeAccount(me, { t, server: api.server }).hints.join("\n") };
+    }
+    say(term.dim(t("kontextCollecting")));
+    try {
+      const built = await buildContextMessage({ cwd, idea, intro: t("kontextIntro"), max: MAX_USER_MESSAGE_CHARS });
+      if (built.kind === "noRoom") return { refusal: t("kontextNoRoom", { max: MAX_USER_MESSAGE_CHARS }) };
+      return { built, me };
+    } catch (err) {
+      return { refusal: t("generic", { detail: sanitize(String(err?.message ?? err)) }) };
+    }
+  }
+
+  // `/pp --kontext <Idee>`: der Text verlässt den Rechner und bleibt im Chat-Verlauf. Deshalb erst Vorschau
+  // und Empfänger, dann nur ein getipptes "j"; aus einer Pipe wird weder gesammelt noch gesendet, denn
+  // dort könnte das "j" schon in der Eingabe stehen, bevor jemand die Vorschau gesehen hat.
+  async function ppWithContext(idea) {
+    const { refusal, built, me } = await prepareContext(idea);
+    if (refusal) {
+      say(refusal);
+      return;
+    }
+    showPreview(built, me);
+    const answer = await ask(t("kontextConfirm"));
+    if (answer?.trim().toLowerCase() !== t("kontextYes")) {
+      say(t("kontextCancelled"));
+      return;
+    }
+    conversation.reset();
+    lastPrompt = null;
+    await send(built.message);
+  }
+
   async function command(line) {
     const space = line.search(/\s/);
     const name = (space === -1 ? line : line.slice(0, space)).toLowerCase();
     const rest = space === -1 ? "" : line.slice(space + 1).trim();
     switch (name) {
       case "/pp":
+        if (CONTEXT_FLAG.test(rest)) {
+          await ppWithContext(rest.replace(CONTEXT_FLAG, "").trim());
+          return;
+        }
         conversation.reset();
         lastPrompt = null;
         if (rest) await send(rest);

@@ -11,7 +11,7 @@ Das Programm zu PromptPrinter fürs Terminal: dünner Client auf dem Chat des Ha
 Gegenwart, keine Historie.
 
 - **Phase 2 gebaut:** Startbild, `login`, `logout`, `whoami`, Chat, `/pp <Idee>`, `/new`, `/copy`, `/save`.
-- **Phase 3 offen:** `/pp --kontext` mit `context.mjs` aus `promptprinter-pp`, Vorschau und Ja. Absicht plus Kontext höchstens 8000 Zeichen, der Kontext bleibt im Chat-Verlauf gespeichert, das muss die Vorschau sagen.
+- **Phase 3 gebaut:** `/pp --kontext <Idee>`. `src/context.mjs` ist eine Kopie aus `promptprinter-pp` (Herkunft im Kopf, Pin `contract/context-pin.json`; `test/context.test.mjs` und `npm run contract` melden Abweichungen), `src/project-context.mjs` baut daraus die Nachricht: höchstens 8000 Zeichen, gekürzt wird nur der Kontext. Vorschau mit Empfänger und Hinweis auf den Chat-Verlauf, nur ein getipptes `j` sendet, aus einer Pipe nie.
 - **Phase 4 offen:** Veröffentlichung auf npm. `"private": true` in `package.json` verhindert sie bis dahin. Voraussetzung: Kasums Ja und sein npm-Konto.
 
 ## Aufbau
