@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { EventEmitter } from "node:events";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -355,15 +356,34 @@ function fakeSpawn(behaviour) {
   return { spawn, calls };
 }
 
-test("Zwischenablage: Windows bekommt UTF-16 mit BOM, nie über eine Shell", async () => {
+test("Zwischenablage: Windows bekommt den Text als UTF-8 über stdin, nie im Befehl und nie über eine Shell", async () => {
   const { spawn, calls } = fakeSpawn(() => 0);
-  assert.equal(await copyToClipboard("Grüße", { platform: "win32", env: {}, spawn }), true);
-  assert.equal(calls[0].command, "clip");
+  const text = "Grüße $env:PATH";
+  assert.equal(await copyToClipboard(text, { platform: "win32", env: {}, spawn }), true);
+  assert.equal(calls[0].command, "powershell");
   assert.equal(calls[0].options.shell, undefined);
-  const data = calls[0].chunks[0];
-  assert.deepEqual([data[0], data[1]], [0xff, 0xfe]);
-  assert.equal(data.subarray(2).toString("utf16le"), "Grüße");
+  assert.equal(calls[0].args.join(" ").includes("Grüße"), false);
+  assert.equal(calls[0].chunks[0].toString("utf8"), text);
+  assert.deepEqual([...calls[0].chunks[0].subarray(0, 2)].includes(0xff), false, "kein Byte-Order-Mark");
 });
+
+// Nur in der CI: auf einem Entwicklerrechner überschriebe der Test die echte Zwischenablage. Ein Ersatzprogramm
+// hätte das unsichtbare Zeichen von clip.exe nie gezeigt, deshalb hier das echte Windows.
+test(
+  "Zwischenablage: der Text kommt unter Windows Zeichen für Zeichen an",
+  { skip: !(process.platform === "win32" && process.env.CI) },
+  async () => {
+    for (const text of ["ä", "Prüfe: Grüße ✓", "日本語 🐬", "Zeile eins\nZeile zwei", '"$env:PATH" `x` & | ;']) {
+      assert.equal(await copyToClipboard(text), true, text);
+      const read = spawnSync(
+        "powershell",
+        ["-NoProfile", "-Command", "[Console]::Out.Write([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-Clipboard -Raw))))"],
+        { encoding: "utf8" }
+      );
+      assert.equal(Buffer.from(read.stdout.trim(), "base64").toString("utf8"), text);
+    }
+  }
+);
 
 test("Zwischenablage: Linux probiert der Reihe nach, ohne Programm false", async () => {
   const works = fakeSpawn((command) => (command === "xsel" ? 0 : "missing"));
@@ -376,7 +396,7 @@ test("Zwischenablage: Linux probiert der Reihe nach, ohne Programm false", async
 
   const nothing = fakeSpawn(() => "missing");
   assert.equal(await copyToClipboard("x", { platform: "linux", env: {}, spawn: nothing.spawn }), false);
-  assert.equal(nothing.calls.at(-1).command, "clip.exe");
+  assert.equal(nothing.calls.at(-1).command, "powershell.exe");
 
   const mac = fakeSpawn(() => 0);
   await copyToClipboard("Grüße", { platform: "darwin", env: {}, spawn: mac.spawn });

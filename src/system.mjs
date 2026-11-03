@@ -4,23 +4,28 @@ import { basename, extname, resolve } from "node:path";
 
 // Dieselbe Markierung wie beim Markdown-Download im Web (shared/lib/ai-marker.ts im Haupt-Repo).
 const AI_GENERATED_MARKER = "<!-- ai-generated: true; generator: PromptPrinter (Finn) -->";
-const CLIPBOARD_TIMEOUT_MS = 5000;
+const CLIPBOARD_TIMEOUT_MS = 10_000;
+
+// Windows über PowerShell statt clip.exe: clip behält ein Byte-Order-Mark als unsichtbares Zeichen im
+// Prompt und errät ohne es die Kodierung falsch (ein einzelnes "ä" kommt kaputt an). Der Text steht nie im
+// Befehl, er kommt als UTF-8 über stdin.
+const WINDOWS_SET_CLIPBOARD = [
+  "-NoProfile",
+  "-NonInteractive",
+  "-Command",
+  "[Console]::InputEncoding=[Text.UTF8Encoding]::new($false); Set-Clipboard -Value ([Console]::In.ReadToEnd())",
+];
 
 function clipboardCandidates(platform, env) {
-  if (platform === "win32") return [{ command: "clip", args: [], utf16: true }];
+  if (platform === "win32") return [{ command: "powershell", args: WINDOWS_SET_CLIPBOARD }];
   if (platform === "darwin") return [{ command: "pbcopy", args: [] }];
   return [
     ...(env.WAYLAND_DISPLAY ? [{ command: "wl-copy", args: [] }] : []),
     { command: "xclip", args: ["-selection", "clipboard"] },
     { command: "xsel", args: ["--clipboard", "--input"] },
     // WSL: Linux, aber die Zwischenablage gehört Windows.
-    { command: "clip.exe", args: [], utf16: true },
+    { command: "powershell.exe", args: WINDOWS_SET_CLIPBOARD },
   ];
-}
-
-// clip.exe liest ohne Hinweis die alte Codepage und zerstört Umlaute. Mit Byte-Order-Mark nimmt es UTF-16.
-function encodeForClipboard(text, utf16) {
-  return utf16 ? Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(text, "utf16le")]) : Buffer.from(text, "utf8");
 }
 
 function pipeTo(candidate, data, spawn) {
@@ -47,7 +52,7 @@ function pipeTo(candidate, data, spawn) {
 
 export async function copyToClipboard(text, { platform = process.platform, env = process.env, spawn = nodeSpawn } = {}) {
   for (const candidate of clipboardCandidates(platform, env)) {
-    if (await pipeTo(candidate, encodeForClipboard(text, candidate.utf16), spawn)) return true;
+    if (await pipeTo(candidate, Buffer.from(text, "utf8"), spawn)) return true;
   }
   return false;
 }
