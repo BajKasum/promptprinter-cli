@@ -1,7 +1,9 @@
+import { execFile } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { mkdir, open, readFile, rename, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
+import { promisify } from "node:util";
 import { ApiError } from "./api.mjs";
 
 /** Niemand ist (mehr) angemeldet. */
@@ -17,8 +19,8 @@ const LOCK_STALE_MS = 30_000;
 const LOCK_WAIT_MS = 10_000;
 
 /**
- * Die Sitzung auf der Platte. Eine Datei, nur für diesen Nutzer lesbar (`0600`, unter Windows gelten die
- * Rechte des Benutzerordners). Sie enthält keine Schlüssel eines Anbieters, aber Zugang zum Konto.
+ * Die Sitzung auf der Platte. Eine Datei, nur für diesen Nutzer lesbar (`0600`, unter Windows eine eigene
+ * Zugriffsliste, `restrictToUser`). Sie enthält keine Schlüssel eines Anbieters, aber Zugang zum Konto.
  */
 export function createSessionStore({ dir, server, now = () => Date.now() }) {
   const path = join(dir, FILE);
@@ -50,6 +52,7 @@ export function createSessionStore({ dir, server, now = () => Date.now() }) {
    */
   async function save(session) {
     await mkdir(dir, { recursive: true, mode: 0o700 });
+    if (process.platform === "win32") await restrictToUser(dir);
     const tmp = join(dir, `${FILE}.${process.pid}.${randomBytes(4).toString("hex")}.tmp`);
     const record = {
       server,
@@ -104,6 +107,31 @@ export function createSessionStore({ dir, server, now = () => Date.now() }) {
   }
 
   return { load, save, clear, withLock, path };
+}
+
+const run = promisify(execFile);
+let userSid;
+
+/**
+ * Unter Windows gibt es kein `0700`: der Ordner erbt die Rechte von %APPDATA%, und die lassen auf manchen
+ * Rechnern weitere Konten lesen (gemessen: zwei lokale Konten der Sandbox eines KI-Agenten). Deshalb keine
+ * geerbten Rechte, nur dieser Nutzer; die Dateien darin erben genau das. Bei jedem Speichern, damit auch ein
+ * älterer Ordner es bekommt. Scheitert es (ein Laufwerk ohne Zugriffslisten), bleiben die geerbten Rechte,
+ * wie ohne diesen Schritt: eine Anmeldung, die an einem Werkzeug scheitert, schützt niemanden.
+ */
+async function restrictToUser(dir) {
+  // Mit festem Pfad: in Git Bash steht ein anderes `whoami` vorn im PATH, das /user nicht kennt.
+  const system32 = join(process.env.SystemRoot ?? "C:\\Windows", "System32");
+  try {
+    userSid ??= run(join(system32, "whoami.exe"), ["/user", "/fo", "csv", "/nh"], { windowsHide: true }).then(
+      ({ stdout }) => /"(S-1-[\d-]+)"/.exec(stdout)?.[1]
+    );
+    const sid = await userSid;
+    if (!sid) return;
+    await run(join(system32, "icacls.exe"), [dir, "/inheritance:r", "/grant:r", `*${sid}:(OI)(CI)F`, "/q"], { windowsHide: true });
+  } catch {
+    // Siehe oben: dann gelten die Rechte des Benutzerordners.
+  }
 }
 
 async function isStale(lockPath, now) {

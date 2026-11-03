@@ -43,6 +43,21 @@ jobs:
       - name: Jede Schranke wird von einem Test bemerkt
         run: npm run mutation
 
+  mutation-windows:
+    name: Mutationen unter Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: Die Zugriffsliste der Sitzung wird von einem Test bemerkt
+        run: npm run mutation -- "unter Windows"
+
   test:
     name: Test (${{ matrix.os }}, Node ${{ matrix.node }})
     runs-on: ${{ matrix.os }}
