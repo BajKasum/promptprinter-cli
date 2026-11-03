@@ -12,7 +12,7 @@ Gegenwart, keine Historie.
 
 - **Phase 2 gebaut:** Startbild, `login`, `logout`, `whoami`, Chat, `/pp <Idee>`, `/new`, `/copy`, `/save`.
 - **Phase 3 offen:** `/pp --kontext` mit `context.mjs` aus `promptprinter-pp`, Vorschau und Ja. Absicht plus Kontext höchstens 8000 Zeichen, der Kontext bleibt im Chat-Verlauf gespeichert, das muss die Vorschau sagen.
-- **Phase 4 offen:** Veröffentlichung auf npm. `"private": true` in `package.json` verhindert sie bis dahin. Voraussetzung: #228 im Haupt-Repo gemergt, Kasums Ja, sein npm-Konto.
+- **Phase 4 offen:** Veröffentlichung auf npm. `"private": true` in `package.json` verhindert sie bis dahin. Voraussetzung: Kasums Ja und sein npm-Konto.
 
 ## Aufbau
 

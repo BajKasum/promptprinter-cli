@@ -1,0 +1,13 @@
+{
+  "src/shared/lib/chat-stream.ts": "d489f29ac440669c8099f9cb91d1db5a0a84884af88b8699ad17cff2563b459b",
+  "src/shared/lib/chat-limits.ts": "68958bb3ef87dc279942b25eaf5da81d732c737f4daea8566e3c2891ccb40682",
+  "src/shared/lib/saved-prompts.ts": "c390fd9417db350e523a8b4f88cce499e3555d3fe21b166cf76ef58ac6a9342e",
+  "src/shared/lib/ai-marker.ts": "3fdb881ff63dfb5862d79e5ec37cb2a138a44d0dd3034e73fbd72d06cce8bacf",
+  "src/features/chat/lib/normalize-fences.ts": "8850d1da78d046185aaa4f98a93197478f582ac8e58314f121c4585ac2b32cc7",
+  "src/app/api/cli/device/route.ts": "f5360c4a0a4fa316b30f01fc9910c55dd3d9732e0a464e972ff44613ecacad11",
+  "src/app/api/cli/token/route.ts": "fb6fe9e4f6ddc1e25267db6e3f5d1dd2b998f790ae5c93e3d6c0cc7323ccf595",
+  "src/app/api/cli/refresh/route.ts": "1719a9cb3b55299e8230a0bb2cc2d94fc4e7fe81ca5b0203e4d24abd455abb23",
+  "src/app/api/cli/logout/route.ts": "ed1dd1677615271f41a975cfeefca85e31db2c2cc585b7a14eb9090ec324e13e",
+  "src/app/api/cli/me/route.ts": "0b3c290ba222d6babad4fdaf83fa51dbef43e86e321c10a8981ddde7f6c044ae",
+  "src/server/cli-login/messages.ts": "4c544787196f671ec7810359a6405a5c4848453a1e2fb216ed017dbd81604ec0"
+}
