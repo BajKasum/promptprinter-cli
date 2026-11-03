@@ -31,7 +31,7 @@ beforeEach(async () => {
 });
 afterEach(async () => {
   await stub.close();
-  rmSync(dir, { recursive: true, force: true });
+  rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 const noWait = async () => {};

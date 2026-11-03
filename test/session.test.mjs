@@ -15,7 +15,7 @@ beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), "pp-session-"));
 });
 afterEach(() => {
-  rmSync(dir, { recursive: true, force: true });
+  rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 const store = (server = SERVER) => createSessionStore({ dir: join(dir, "cfg"), server });
