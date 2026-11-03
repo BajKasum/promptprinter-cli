@@ -2,7 +2,7 @@
 
 Tell Finn what you want, answer one short question, get one finished prompt that works in any AI. This is the terminal client of [PromptPrinter](https://promptprinter.app): the same account, the same Finn, your conversations also show up in the browser.
 
-> **Status: in development, not on npm yet.** Sign-in and chat work. `/pp --kontext` (sending local project context) comes next.
+> **Status: in development, not on npm yet.** Sign-in, chat and `/pp --kontext` (local project context, sent only after a preview) work.
 
 ```text
 > /pp landing page for a hairdresser
