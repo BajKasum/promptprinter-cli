@@ -1,0 +1,2 @@
+# LF überall: mit CRLF liefe die erste Zeile von bin/promptprinter.mjs unter Linux und macOS nicht.
+* text=auto eol=lf
