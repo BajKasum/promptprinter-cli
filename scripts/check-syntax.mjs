@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 
-const files = ["bin", "src", "scripts", "test", join("test", "support")].flatMap((dir) =>
+const files = ["bin", "src", "scripts", "test", join("test", "support"), "acceptance"].flatMap((dir) =>
   readdirSync(dir)
     .filter((name) => name.endsWith(".mjs"))
     .map((name) => join(dir, name))
