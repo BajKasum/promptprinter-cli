@@ -1,0 +1,55 @@
+name: Veröffentlichen
+
+# Veröffentlicht nie von selbst: nur ein Tag vX.Y.Z startet ihn, und Tags setzt Kasum von Hand. Angemeldet wird per
+# Trusted Publishing (OIDC): kein npm-Token im Repo, npm hängt die Provenance selbst an. Das setzt voraus, dass das
+# Paket schon existiert und auf npmjs.com diesen Workflow als Trusted Publisher kennt; die erste Version geht deshalb
+# von Hand hinaus (CLAUDE.md, "Veröffentlichung"). Solange package.json "private": true sagt, lehnt npm ohnehin ab.
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: npm publish
+    runs-on: ubuntu-latest
+    # Auf GitHub kann Kasum hier eine Freigabe von Hand verlangen (Settings, Environments, "npm").
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Nur was auf main liegt, und der Tag nennt die Version aus package.json
+        run: |
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+          node -e "const v = require('./package.json').version; if (process.env.GITHUB_REF_NAME !== 'v' + v) { console.error('Tag ' + process.env.GITHUB_REF_NAME + ' passt nicht zu ' + v); process.exit(1); }"
+
+      - name: npm kann Trusted Publishing (ab 11.5.1)
+        run: |
+          node -e "const [a, b, c] = require('child_process').execSync('npm --version').toString().split('.').map(Number); process.exit(a * 1e6 + b * 1e3 + c >= 11005001 ? 0 : 1)"
+
+      - name: Syntax
+        run: npm run check
+
+      - name: Tests
+        run: npm test
+
+      - name: Veröffentlichen
+        run: npm publish --provenance --access public

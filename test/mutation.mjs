@@ -9,6 +9,9 @@ const POSIX = "posix";
 const WINDOWS = "win32";
 const filter = process.argv[2];
 const mutations = [
+  ["package.json", "Tests im Paket", '"files": ["bin", "src", "LICENSE", "README.md"]', '"files": ["bin", "src", "test", "LICENSE", "README.md"]'],
+  [".github/workflows/release.yml", "Release auch ohne Tag", '    tags: ["v*.*.*"]', '    branches: [main]\n    tags: ["v*.*.*"]'],
+  [".github/workflows/release.yml", "Release mit Token", "run: npm publish --provenance --access public", "run: npm publish --provenance --access public\n        env:\n          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}"],
   ["src/text.mjs", "Steuerfolgen bleiben", '.replace(ESCAPE_SEQUENCE, "")', ""],
   ["src/text.mjs", "Steuerzeichen bleiben", '.replace(UNSAFE, "")', ""],
   ["src/chat.mjs", "Modelltext unbereinigt", "const clean = sanitize(parsed.data.text);", "const clean = parsed.data.text;"],
