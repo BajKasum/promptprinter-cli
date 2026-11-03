@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -44,19 +45,27 @@ test("die Datei ist nur für den Nutzer lesbar", { skip: process.platform === "w
   assert.equal(statSync(s.path).mode & 0o777, 0o600);
 });
 
-test("unter Windows lesen Ordner und Datei nur der Nutzer selbst, nichts ist geerbt", { skip: process.platform !== "win32" }, async () => {
+test("unter Windows liest ausser dem Nutzer niemand Ordner und Datei, nichts ist geerbt", { skip: process.platform !== "win32" }, async () => {
   const s = store();
   await s.save(record("a", "r"));
   const system32 = join(process.env.SystemRoot ?? "C:\\Windows", "System32");
-  const me = execFileSync(join(system32, "whoami.exe"), { encoding: "utf8" }).trim().toLowerCase();
-  // icacls nennt je Zeile einen Eintrag "Konto:(Rechte)", die erste Zeile beginnt mit dem Pfad.
-  const entries = (path) =>
-    execFileSync(join(system32, "icacls.exe"), [path], { encoding: "utf8" })
-      .split(/\r?\n/)
-      .filter((line) => line.includes(":("))
-      .map((line) => line.replace(path, "").trim().toLowerCase());
-  assert.deepEqual(entries(join(dir, "cfg")), [`${me}:(oi)(ci)(f)`]);
-  assert.deepEqual(entries(s.path), [`${me}:(i)(f)`]);
+  const me = /"(S-1-[\d-]+)"/.exec(execFileSync(join(system32, "whoami.exe"), ["/user", "/fo", "csv", "/nh"], { encoding: "utf8" }))[1];
+  // Die Zugriffsliste als SDDL, die Konten als SID: unabhängig von der Sprache von Windows. SYSTEM (SY) und Administratoren
+  // (BA) gibt Windows einem neuen Ordner ohne erbbare Rechte ausdrücklich mit (so auf den Rechnern der CI); an jede Datei
+  // kommen sie ohnehin.
+  const sddl = (path) => {
+    const file = join(dir, `acl-${randomUUID()}.txt`);
+    execFileSync(join(system32, "icacls.exe"), [path, "/save", file, "/q"]);
+    return readFileSync(file, "utf16le").split(/\r?\n/)[1];
+  };
+  const trustees = (text) => new Set([...text.matchAll(/\(A;[^;]*;[^;]*;;;([^)]+)\)/g)].map((ace) => ace[1]));
+  const allowed = new Set([me, "SY", "BA"]);
+  for (const path of [join(dir, "cfg"), s.path]) {
+    const found = trustees(sddl(path));
+    assert.ok(found.has(me), path);
+    assert.deepEqual([...found].filter((sid) => !allowed.has(sid)), [], path);
+  }
+  assert.match(sddl(join(dir, "cfg")), /^D:P/, "der Ordner erbt nichts mehr");
 });
 
 test("eine Sitzung gilt nur für ihren Server", async () => {
