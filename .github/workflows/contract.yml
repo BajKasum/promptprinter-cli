@@ -1,0 +1,27 @@
+name: Vertrag mit dem Server
+
+# Das Programm liest denselben Vertrag wie der Browser, kann ihn aber aus diesem Repo nicht importieren.
+# Rot heisst: lesen, was sich geändert hat, hier nachziehen, dann die Prüfsummen erneuern (CLAUDE.md).
+on:
+  schedule:
+    - cron: "30 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: Vertrag prüfen
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: Dateien auf main des Haupt-Repos gegen die Prüfsummen
+        run: npm run contract

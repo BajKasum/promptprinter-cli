@@ -1,0 +1,65 @@
+# CLAUDE.md, Projekt-Kontext für Claude-Code-Sessions
+
+Wird bei jedem Session-Start geladen. Kurz: was das Projekt ist, in welchem Zustand es steckt, nach welchen Regeln hier gearbeitet wird.
+
+## Was ist promptprinter-cli?
+
+Das Programm zu PromptPrinter fürs Terminal: dünner Client auf dem Chat des Haupt-Repos (`BajKasum/PromptPrinter`). Anmeldung per Geräte-Code im Browser, danach eine eigene Supabase-Sitzung als `Authorization: Bearer`. Plan und Stand stehen im Vault: "PromptPrinter Terminal-App Stand und Restplan", "PromptPrinter Terminal-App Architektur".
+
+## IST-Zustand
+
+Gegenwart, keine Historie.
+
+- **Phase 2 gebaut:** Startbild, `login`, `logout`, `whoami`, Chat, `/pp <Idee>`, `/new`, `/copy`, `/save`.
+- **Phase 3 offen:** `/pp --kontext` mit `context.mjs` aus `promptprinter-pp`, Vorschau und Ja. Absicht plus Kontext höchstens 8000 Zeichen, der Kontext bleibt im Chat-Verlauf gespeichert, das muss die Vorschau sagen.
+- **Phase 4 offen:** Veröffentlichung auf npm. `"private": true` in `package.json` verhindert sie bis dahin. Voraussetzung: #228 im Haupt-Repo gemergt, Kasums Ja, sein npm-Konto.
+
+## Aufbau
+
+Node 22 oder neuer, ESM, **keine Laufzeit-Abhängigkeiten**.
+
+| Datei | Aufgabe |
+|---|---|
+| `bin/promptprinter.mjs` | Einstieg, Versionsprüfung |
+| `src/cli.mjs` | Befehle von aussen, Start des Programms |
+| `src/repl.mjs` | Eingabezeile und Befehle im Programm |
+| `src/api.mjs` | je Route eine Methode, keine Umleitungen |
+| `src/session.mjs` | Sitzung auf der Platte, Sperre, Erneuern |
+| `src/login.mjs` | Anmeldung per Geräte-Code |
+| `src/chat.mjs` | ein Zug, Verlauf |
+| `src/sse.mjs` | Antwort-Strom lesen |
+| `src/render.mjs` | Antwort zeichnen, Blöcke rahmen |
+| `src/text.mjs` | Steuerzeichen entfernen, umbrechen |
+| `src/system.mjs` | Zwischenablage, Datei, Browser |
+| `src/messages.mjs` | Texte, deutsch und englisch |
+
+## Regeln, die hier gelten
+
+- **Text vom Server ist fremd.** Was auf den Bildschirm geht, läuft durch `sanitize` (`text.mjs`): ein Terminal führt Steuerfolgen aus.
+- **Ein Token geht nur an seinen Server.** `session.mjs` lädt eine Sitzung nur für den Server, der sie ausgestellt hat; `api.mjs` folgt keiner Umleitung; `config.mjs` erlaubt `http` nur auf dem eigenen Rechner.
+- **Das Programm kennt den Key des Anbieters nie.** Der Server holt ihn pro Zug.
+- **Kein Token, kein Geräte-Code in einer Ausgabe.**
+- **Das neue Refresh-Token wird gespeichert, bevor es jemand benutzt.** Auf Produktion erkennt der Auth-Server wiederverwendete Tokens.
+
+## Verhältnis zum Haupt-Repo
+
+Zwei Repos, kein gemeinsamer Code. Das Haupt-Repo ist "alle Rechte vorbehalten", dieses MIT, deshalb übernimmt dieses Repo nur Verträge und Ideen als eigenen Text.
+
+| Quelle im Haupt-Repo | Wird hier |
+|---|---|
+| `src/shared/lib/chat-stream.ts` | `src/sse.mjs` |
+| `src/app/api/cli/*/route.ts` | `src/api.mjs`, `src/login.mjs` |
+| `src/shared/lib/chat-limits.ts` | `src/chat.mjs` |
+| `extractPrompt` in `src/shared/lib/saved-prompts.ts` | `src/extract-prompt.mjs` |
+| `normalizeFences` | `src/render.mjs` |
+| `src/shared/lib/ai-marker.ts` | `src/system.mjs` |
+
+`npm run contract` vergleicht die Dateien der Liste `contract/pins.json` mit dem Stand auf `main` (Workflow `contract.yml`, wöchentlich). Wird er rot, hat sich der Vertrag oder ein Kommentar dort geändert: lesen, hier nachziehen, dann `node scripts/check-contract.mjs --update`.
+
+## Arbeitsregeln (wie im Haupt-Repo)
+
+- Git-Staging explizit per Dateiname. Nach `main` per Pull Request mit "Rebase and merge", Branches nie löschen, nie force-pushen.
+- Vor jedem Push: `npm run check && npm test`. Für jede neue Schranke eine Zeile in `test/mutation.mjs` (`npm run mutation`).
+- Commit-Nachrichten deutsch, Conventional Commits, Trailer `Co-Authored-By: Claude <aktuelles Modell> <noreply@anthropic.com>`.
+- Kommentare auf Deutsch, sagen was gilt und warum, kein Verlauf.
+- Veröffentlichung auf npm, Rechtstexte: nur mit Kasums ausdrücklichem Ja.

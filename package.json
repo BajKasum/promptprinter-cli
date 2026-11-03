@@ -1,0 +1,21 @@
+{
+  "name": "promptprinter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PromptPrinter in your terminal: tell Finn what you want, get one finished prompt for any AI.",
+  "license": "MIT",
+  "author": "Kasum Bajrami",
+  "homepage": "https://promptprinter.app",
+  "repository": { "type": "git", "url": "git+https://github.com/BajKasum/promptprinter-cli.git" },
+  "type": "module",
+  "bin": { "promptprinter": "bin/promptprinter.mjs" },
+  "files": ["bin", "src", "LICENSE", "README.md"],
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node bin/promptprinter.mjs",
+    "test": "node --test --test-timeout=60000 \"test/*.test.mjs\"",
+    "check": "node scripts/check-syntax.mjs",
+    "mutation": "node test/mutation.mjs",
+    "contract": "node scripts/check-contract.mjs"
+  }
+}
