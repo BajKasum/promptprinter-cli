@@ -63,3 +63,14 @@ Zwei Repos, kein gemeinsamer Code. Das Haupt-Repo ist "alle Rechte vorbehalten",
 - Commit-Nachrichten deutsch, Conventional Commits, Trailer `Co-Authored-By: Claude <aktuelles Modell> <noreply@anthropic.com>`.
 - Kommentare auf Deutsch, sagen was gilt und warum, kein Verlauf.
 - Veröffentlichung auf npm, Rechtstexte: nur mit Kasums ausdrücklichem Ja.
+
+## Veröffentlichung
+
+Vorbereitet, nicht veröffentlicht. `"private": true` bleibt, bis Kasum Ja sagt; npm lehnt solange jedes `publish` ab.
+
+- **Paketinhalt:** `"files"` lässt nur `bin`, `src`, `LICENSE`, `README.md` und `package.json` hinein, `test/package.test.mjs` fragt dazu `npm pack --dry-run`. npm lässt eine `.env` in diesen Ordnern nicht von sich aus weg, der Test schlägt dann an.
+- **Weg:** `.github/workflows/release.yml` läuft nur auf einen Tag `vX.Y.Z` (Tag gleich Version, Commit auf `main`), meldet sich per Trusted Publishing an und veröffentlicht mit Provenance. Kein npm-Token im Repo, `test/release-workflow.test.mjs` hält beides fest.
+- **Die erste Version geht von Hand hinaus:** einen Trusted Publisher kann man nur für ein Paket eintragen, das es schon gibt. Danach auf npmjs.com den Workflow eintragen und Tokens für das Paket sperren. Kasums Handgriffe und der genaue Befehl stehen im Vault, "PromptPrinter Terminal-App Phase 4 Vorbereitung".
+- **README:** der Abschnitt "Install" ist als Kommentar vorbereitet und wird erst mit der Veröffentlichung sichtbar. Vorher keinen Installationsbefehl zeigen: wer den Namen zuerst belegt, bekäme sonst die Nutzer.
+- **Windows:** `session.mjs` gibt dem Sitzungsordner eine eigene Zugriffsliste (keine geerbten Rechte, nur der Nutzer), wie `0700` anderswo. `whoami` und `icacls` mit festem Pfad aus System32, in Git Bash steht ein anderes `whoami` vorn. Die Mutationen dazu laufen nur unter Windows, in der CI im Job "Mutationen unter Windows".
+- **Abnahme mit dem echten Programm:** `acceptance/`, ausserhalb von `npm test` und Paket, läuft im Haupt-Repo gegen den lokalen Stack (`acceptance/README.md`).
