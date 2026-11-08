@@ -1,19 +1,21 @@
 import assert from "node:assert/strict";
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, test } from "node:test";
 import { findOnPath, fitsCommandLine, launchPlan, runAgent } from "../src/agents.mjs";
 
 // Ein Prompt mit allem, was eine Shell als Befehl läse: cmd.exe (& | % ^ < > "), sh ($ ` ; '), dazu Zeilenumbrüche und
-// ein Anfang mit "-", der ohne "--" eine Option des Agenten wäre.
+// ein Anfang mit "-", der ohne "--" eine Option des Agenten wäre. Die Befehle darin sind harmlos und legen nur eine
+// Markierungsdatei an: unter der Mutation "über eine Shell" laufen sie wirklich, auch in der CI.
 const HOSTILE = [
   "--dangerously-skip-permissions",
-  'Sag "Hallo" & echo GEHACKT | more',
-  "100% %PATH% %USERNAME% ^ <nul >datei",
-  "$(whoami) `id` ; rm -rf ~ 'ein Zitat'",
+  'Sag "Hallo" & echo GEHACKT > gehackt-cmd.txt | more',
+  "100% %PATH% %USERNAME% ^ <nul >gehackt-umleitung.txt",
+  "$(echo GEHACKT > gehackt-sh.txt) `echo x` ; echo GEHACKT > gehackt-sh2.txt 'ein Zitat'",
   "Zeile drei\r\nZeile vier\\\\\"",
 ].join("\n");
+const marks = (folder) => readdirSync(folder).filter((name) => name.startsWith("gehackt"));
 
 let dir;
 beforeEach(() => {
@@ -65,6 +67,7 @@ test("/an: ein npm-Shim unter Windows wird aufgelöst, der Prompt kommt ohne She
   // Wirklich starten: kommt ein "&" oder "|" bei einer Shell vorbei, fehlt die Datei oder sie enthält anderes.
   const code = await runAgent(plan, { stdio: "ignore", cwd: dir });
   assert.equal(code, 0);
+  assert.deepEqual(marks(dir), [], "kein Befehl aus dem Prompt ist gelaufen");
   assert.deepEqual(JSON.parse(readFileSync(out, "utf8")), ["--", HOSTILE]);
 });
 
@@ -126,6 +129,7 @@ test("/an: unter POSIX zählt nur eine ausführbare Datei", { skip: process.plat
   assert.equal(await findOnPath("claude", { env: { PATH: dir }, platform: "linux" }), file);
   const plan = await launchPlan(file, HOSTILE, { platform: "linux" });
   assert.equal(await runAgent(plan, { stdio: "ignore", cwd: dir }), 0);
+  assert.deepEqual(marks(dir), [], "kein Befehl aus dem Prompt ist gelaufen");
   assert.deepEqual(JSON.parse(readFileSync(out, "utf8")), ["--", HOSTILE]);
 });
 
