@@ -1,5 +1,6 @@
 import { createInterface } from "node:readline";
 import { describeAccount, fetchAccount, signOut } from "./account.mjs";
+import { AGENTS, findOnPath, fitsCommandLine, launchPlan, runAgent } from "./agents.mjs";
 import { createConversation, MAX_USER_MESSAGE_CHARS, runTurn } from "./chat.mjs";
 import { describeError } from "./errors.mjs";
 import { extractPrompt } from "./extract-prompt.mjs";
@@ -195,6 +196,53 @@ export function runRepl(ctx) {
     await send(built.message);
   }
 
+  // `/an claude`, `/an codex`: der Agent übernimmt das Terminal, bis er endet. Solange liest diese Eingabezeile nichts,
+  // und Strg+C gehört dem Agenten (der Prozess bekommt es auch, darf daran aber nicht enden).
+  async function handOver(rest) {
+    const agent = AGENTS[rest.toLowerCase()];
+    if (!agent) {
+      say(t("anUsage"));
+      return;
+    }
+    if (!lastPrompt) {
+      say(t("noPromptYet"));
+      return;
+    }
+    if (!term.isTTY || !input.isTTY) {
+      say(t("anNoTerminal", { name: agent.name }));
+      return;
+    }
+    if (!fitsCommandLine(lastPrompt)) {
+      say(t("anTooLong", { name: agent.name }));
+      return;
+    }
+    const file = await (ctx.findAgent ?? findOnPath)(agent.command);
+    if (!file) {
+      say(t("anMissing", { name: agent.name, command: agent.command, url: agent.install }));
+      return;
+    }
+    const plan = await launchPlan(file, lastPrompt);
+    if (plan.kind !== "ok") {
+      say(t("anUnsupported", { name: agent.name, file: sanitize(file) }));
+      return;
+    }
+    say(term.dim(t("anStarting", { name: agent.name })));
+    const keep = () => {};
+    process.on("SIGINT", keep);
+    rl.pause();
+    if (input.isTTY && input.setRawMode) input.setRawMode(false);
+    try {
+      const code = await (ctx.runAgent ?? runAgent)(plan, { cwd });
+      say(term.dim(t("anBack", { name: agent.name, code })));
+    } catch (err) {
+      say(t("anFailed", { name: agent.name, detail: sanitize(String(err?.message ?? err)) }));
+    } finally {
+      process.removeListener("SIGINT", keep);
+      if (input.isTTY && input.setRawMode) input.setRawMode(true);
+      rl.resume();
+    }
+  }
+
   async function command(line) {
     const space = line.search(/\s/);
     const name = (space === -1 ? line : line.slice(0, space)).toLowerCase();
@@ -231,6 +279,9 @@ export function runRepl(ctx) {
         else say(t("saveFailed", { reason: saved.reason }));
         return;
       }
+      case "/an":
+        await handOver(rest);
+        return;
       case "/whoami":
         await whoami();
         return;

@@ -8,6 +8,8 @@ const MESSAGES = {
   /new             neues Gespräch
   /copy            letzten Prompt in die Zwischenablage
   /save [Datei]    letzten Prompt als Markdown speichern
+  /an claude       letzten Prompt in Claude Code öffnen, hier im Terminal
+  /an codex        letzten Prompt in Codex öffnen, hier im Terminal
   /whoami          Konto, Plan und Key anzeigen
   /login, /logout  anmelden, dieses Gerät abmelden
   /help            diese Liste
@@ -22,7 +24,7 @@ const MESSAGES = {
   --help         diese Hilfe`,
     disclosure: "Finn ist eine KI und kann Fehler machen. Prüf wichtige Angaben selbst.",
     tips: "/pp <Idee>  Prompt drucken   /help  Befehle   /exit  Ende",
-    actions: "/copy kopieren   /save speichern   /pp neuer Prompt",
+    actions: "/copy kopieren   /save speichern   /an claude oder codex   /pp neuer Prompt",
     prompt: "Prompt",
     finn: "Finn",
     thinking: "Finn denkt nach ...",
@@ -49,6 +51,14 @@ const MESSAGES = {
     kontextYes: "j",
     kontextCancelled: "Nichts gesendet.",
     newChat: "Neues Gespräch.",
+    anUsage: "Schreib, an wen: /an claude oder /an codex",
+    anNoTerminal: "/an startet {name} in diesem Terminal und geht deshalb nur in einem echten Terminal, nicht aus einer Pipe.",
+    anTooLong: "Der Prompt ist zu lang für eine Befehlszeile unter Windows. /copy kopiert ihn, dann in {name} einfügen.",
+    anMissing: "{name} ist hier nicht installiert (Befehl `{command}` nicht gefunden). Installieren: {url}",
+    anUnsupported: "{name} liegt als {file} vor, und das lässt sich nicht ohne Shell starten. /copy kopiert den Prompt, dann in {name} einfügen.",
+    anStarting: "Starte {name} mit dem Prompt. Wenn du {name} beendest, geht es hier weiter.",
+    anBack: "Zurück bei PromptPrinter ({name} endete mit {code}).",
+    anFailed: "{name} liess sich nicht starten: {detail}",
     unknownCommand: "Unbekannter Befehl: {command}. /help zeigt alle.",
     tooLong: "Das sind {length} Zeichen, höchstens {max} gehen in einer Nachricht.",
     stopped: "Abgebrochen.",
@@ -101,6 +111,8 @@ const MESSAGES = {
   /new             new conversation
   /copy            copy the latest prompt
   /save [file]     save the latest prompt as Markdown
+  /an claude       open the latest prompt in Claude Code, right here
+  /an codex        open the latest prompt in Codex, right here
   /whoami          show account, plan and key
   /login, /logout  sign in, sign this device out
   /help            this list
@@ -115,7 +127,7 @@ const MESSAGES = {
   --help         this help`,
     disclosure: "Finn is an AI and can make mistakes. Double-check important details.",
     tips: "/pp <idea>  print a prompt   /help  commands   /exit  quit",
-    actions: "/copy copy   /save save   /pp new prompt",
+    actions: "/copy copy   /save save   /an claude or codex   /pp new prompt",
     prompt: "Prompt",
     finn: "Finn",
     thinking: "Finn is thinking ...",
@@ -142,6 +154,14 @@ const MESSAGES = {
     kontextYes: "y",
     kontextCancelled: "Nothing sent.",
     newChat: "New conversation.",
+    anUsage: "Say to whom: /an claude or /an codex",
+    anNoTerminal: "/an starts {name} in this terminal, so it only works in a real terminal, not from a pipe.",
+    anTooLong: "The prompt is too long for a command line on Windows. /copy copies it, then paste it into {name}.",
+    anMissing: "{name} is not installed here (command `{command}` not found). Install it: {url}",
+    anUnsupported: "{name} is installed as {file}, which cannot be started without a shell. /copy copies the prompt, then paste it into {name}.",
+    anStarting: "Starting {name} with the prompt. When you quit {name}, you are back here.",
+    anBack: "Back in PromptPrinter ({name} exited with {code}).",
+    anFailed: "{name} could not be started: {detail}",
     unknownCommand: "Unknown command: {command}. /help shows all of them.",
     tooLong: "That is {length} characters, a message can have at most {max}.",
     stopped: "Stopped.",
