@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { banner, BANNER_WIDTH } from "../src/banner.mjs";
+import { banner, BANNER_WIDTH, FINN_WIDTH } from "../src/banner.mjs";
 import { ConfigError, configDir, DEFAULT_SERVER, serverUrl } from "../src/config.mjs";
 import { extractPrompt } from "../src/extract-prompt.mjs";
 import { detectLang, translator } from "../src/messages.mjs";
@@ -104,6 +104,18 @@ test("Startbild: Blockschrift ohne Rahmenlinien, eine Zeile ab 71 Spalten, zwei 
   assert.equal(art(banner(plainTerm({ columns: 60 }), "1.2.3")).length, 10);
 
   assert.equal(banner(plainTerm({ columns: 59 }), "1.2.3"), plain);
+
+  // Finn nur mit Farbe und ab FINN_WIDTH + 2 + BANNER_WIDTH + 2 Spalten, sonst dasselbe Bild wie ohne ihn.
+  const finnAt = FINN_WIDTH + 2 + BANNER_WIDTH + 2;
+  const withFinn = banner(plainTerm({ color: true, columns: finnAt }), "1.2.3");
+  assert.match(withFinn, /\u001b\[38;2;104;178;226[;m]/, "Finns Körperfarbe");
+  assert.match(withFinn, /[▀▄]/);
+  assert.equal(art(withFinn).length, 5, "der Schriftzug bleibt fünf Zeilen");
+  assert.match(withFinn, /PromptPrinter 1\.2\.3/);
+  const visible = (line) => [...line.replace(/\u001b\[[0-9;]*m/g, "")].length;
+  for (const line of withFinn.split("\n")) assert.ok(visible(line) <= finnAt - 2, line);
+  assert.doesNotMatch(banner(plainTerm({ color: true, columns: finnAt - 1 }), "1.2.3"), /[▀▄]/);
+  assert.doesNotMatch(banner(plainTerm({ color: false, columns: 200 }), "1.2.3"), /[▀▄]|\u001b/);
   assert.equal(banner(plainTerm({ isTTY: false }), "1.2.3"), plain);
   assert.equal(banner(plainTerm({ unicode: false }), "1.2.3"), plain);
 });
