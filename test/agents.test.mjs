@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, relative } from "node:path";
+import { join } from "node:path";
 import { afterEach, beforeEach, test } from "node:test";
 import { findOnPath, fitsCommandLine, launchPlan, runAgent } from "../src/agents.mjs";
 
@@ -103,9 +103,17 @@ test("/an: eine .exe startet direkt, eine unbekannte .cmd gar nicht", async () =
 
 test("/an: gesucht wird nur in absoluten PATH-Ordnern, nicht im aktuellen Ordner", async () => {
   writeFileSync(join(dir, "claude.exe"), "");
-  // Ein relativer Eintrag, der vom aktuellen Ordner aus genau dorthin zeigt, wo claude.exe liegt: trotzdem nicht.
-  const env = { PATH: `.;;${relative(process.cwd(), dir)};${join(dir, "fehlt")}`, PATHEXT: ".EXE" };
-  assert.equal(await findOnPath("claude", { env, platform: "win32" }), null);
+  mkdirSync(join(dir, "sub"));
+  writeFileSync(join(dir, "sub", "claude.exe"), "");
+  // Relative Einträge, die vom aktuellen Ordner aus genau dorthin zeigen, wo claude.exe liegt: trotzdem nicht.
+  const env = { PATH: `.;;sub;${join(dir, "fehlt")}`, PATHEXT: ".EXE" };
+  const before = process.cwd();
+  process.chdir(dir);
+  try {
+    assert.equal(await findOnPath("claude", { env, platform: "win32" }), null);
+  } finally {
+    process.chdir(before);
+  }
   assert.equal(await findOnPath("claude", { env: { PATH: dir, PATHEXT: ".EXE" }, platform: "win32" }), join(dir, "claude.exe"));
 });
 
