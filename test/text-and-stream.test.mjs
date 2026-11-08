@@ -87,15 +87,25 @@ test("extractPrompt nimmt den letzten text-Block, sonst den längsten, und finde
   assert.equal(extractPrompt("```text\n\n```"), null);
 });
 
-test("Startbild: das volle Bild nur im breiten Terminal mit Unicode", () => {
-  const full = banner(plainTerm(), "1.2.3");
-  assert.match(full, /██████╗/);
-  assert.match(full, /PromptPrinter 1\.2\.3/);
-  assert.equal(banner(plainTerm({ isTTY: false }), "1.2.3"), "PromptPrinter 1.2.3");
-  assert.equal(banner(plainTerm({ unicode: false }), "1.2.3"), "PromptPrinter 1.2.3");
-  assert.equal(banner(plainTerm({ columns: BANNER_WIDTH + 1 }), "1.2.3"), "PromptPrinter 1.2.3");
-  assert.match(banner(plainTerm({ columns: BANNER_WIDTH + 2 }), "1.2.3"), /██████╗/);
+test("Startbild: Blockschrift ohne Rahmenlinien, eine Zeile ab 71 Spalten, zwei ab 60, darunter nur der Name", () => {
+  const plain = "PromptPrinter 1.2.3";
+  const art = (text) => text.split("\n").filter((line) => line.includes("█"));
+  const wide = banner(plainTerm({ columns: BANNER_WIDTH + 2 }), "1.2.3");
+  assert.equal(art(wide).length, 5);
+  assert.match(wide, /PromptPrinter 1\.2\.3$/);
+  // Nur volle Blöcke und Leerzeichen: Rahmenlinien zerfallen in Windows Terminal.
+  assert.match(art(wide).join(""), /^[█ ]+$/);
+  for (const line of art(wide)) assert.ok([...line].length <= BANNER_WIDTH, line);
   assert.ok(BANNER_WIDTH <= 78, "passt in 80 Spalten");
+
+  const narrow = banner(plainTerm({ columns: BANNER_WIDTH + 1 }), "1.2.3");
+  assert.equal(art(narrow).length, 10);
+  for (const line of art(narrow)) assert.ok([...line].length < 60, line);
+  assert.equal(art(banner(plainTerm({ columns: 60 }), "1.2.3")).length, 10);
+
+  assert.equal(banner(plainTerm({ columns: 59 }), "1.2.3"), plain);
+  assert.equal(banner(plainTerm({ isTTY: false }), "1.2.3"), plain);
+  assert.equal(banner(plainTerm({ unicode: false }), "1.2.3"), plain);
 });
 
 test("Terminal: Farbe nur im echten Terminal und ohne NO_COLOR", () => {
