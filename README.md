@@ -18,7 +18,7 @@ Finn: Here is your prompt.
 ┌─ Prompt ─────────────────────────────────────────────
 │ ...
 └──────────────────────────────────────────────────────
-/copy copy   /save save   /pp new prompt
+/copy copy   /save save   /an claude or codex   /pp new prompt
 ```
 
 ## Run it from source
@@ -62,9 +62,12 @@ From the second version on, each one is published from GitHub Actions with [prov
 | `/new` | new conversation |
 | `/copy` | copy the latest prompt |
 | `/save [file]` | save the latest prompt as Markdown, never overwrites |
+| `/an claude`, `/an codex` | start Claude Code or Codex right here with the latest prompt as the first message; back to PromptPrinter when you quit it |
 | `/whoami` | show account, plan and key |
 | `/login`, `/logout` | sign in, sign this device out |
 | `/help`, `/exit` | |
+
+`/an` needs the agent installed (`claude` or `codex` on your `PATH`). It never goes through a shell: the prompt is handed over as one argument, so quotes, `&`, `|` or `%` in it stay text. On Windows the `.cmd` file that npm installs is resolved to the script it starts; an unknown kind of wrapper is not started, `/copy` is the way then.
 
 Anything else you type goes to Finn. `Ctrl+C` stops a running reply; at the empty prompt it quits.
 

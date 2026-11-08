@@ -27,11 +27,12 @@ afterEach(async () => {
   rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
-async function start({ login = async () => true } = {}) {
+async function start({ login = async () => true, inputIsTTY = false, ...extra } = {}) {
   const store = createSessionStore({ dir, server: stub.url });
   await store.save(session("a1", "r1"));
   const api = createApi({ server: stub.url, version: "0", lang: "de" });
   const input = new PassThrough();
+  if (inputIsTTY) input.isTTY = true;
   const output = new PassThrough();
   output.isTTY = true;
   output.columns = 100;
@@ -49,6 +50,7 @@ async function start({ login = async () => true } = {}) {
     login,
     copy: async () => true,
     save: async () => ({ kind: "failed", reason: "nicht im Test" }),
+    ...extra,
   });
   return { input, finished, screen: () => screen };
 }
@@ -151,5 +153,51 @@ test("während des Wartens steht ein Hinweis, der mit dem ersten Wort verschwind
   const afterHint = repl.screen().slice(repl.screen().lastIndexOf("neuer Versuch"));
   assert.ok(afterHint.includes("\r\u001b[K"), "die Zeile wird gelöscht");
   repl.input.write("/exit\r");
+  await repl.finished;
+});
+
+const PROMPT_REPLY = ['Hier ist dein Prompt:\n\n```text\n-x Sag "Hallo" & echo | %PATH%\nzweite Zeile\n```\n'];
+
+test("/an claude gibt den letzten Prompt als eigenes Argument nach -- an den Agenten und kommt danach zurück", async () => {
+  stub.state.chat.push(turn(PROMPT_REPLY));
+  const runs = [];
+  const repl = await start({
+    inputIsTTY: true,
+    findAgent: async (command) => (command === "claude" ? join(dir, "claude.exe") : null),
+    runAgent: async (plan) => {
+      runs.push(plan);
+      return 0;
+    },
+  });
+  repl.input.write("/an claude\r");
+  await until(() => repl.screen().includes("Noch kein Prompt"), "ohne Prompt abgelehnt");
+  assert.equal(runs.length, 0);
+
+  repl.input.write("/pp Idee\r");
+  await until(() => repl.screen().includes("/an claude oder codex"), "Prompt fertig");
+  repl.input.write("/an claude\r");
+  await until(() => repl.screen().includes("Zurück bei PromptPrinter"), "Agent beendet");
+  assert.equal(runs.length, 1);
+  assert.deepEqual(runs[0].args.slice(-2), ["--", '-x Sag "Hallo" & echo | %PATH%\nzweite Zeile']);
+
+  repl.input.write("/an codex\r");
+  await until(() => repl.screen().includes("Codex ist hier nicht installiert"), "fehlender Agent gemeldet");
+  repl.input.write("/an gemini\r");
+  await until(() => repl.screen().includes("Schreib, an wen"), "unbekannter Agent");
+  assert.equal(runs.length, 1);
+  repl.input.write(CTRL_C);
+  await repl.finished;
+});
+
+test("/an startet nichts, wenn die Eingabe kein Terminal ist", async () => {
+  stub.state.chat.push(turn(PROMPT_REPLY));
+  const runs = [];
+  const repl = await start({ findAgent: async () => join(dir, "claude.exe"), runAgent: async (plan) => runs.push(plan) });
+  repl.input.write("/pp Idee\r");
+  await until(() => repl.screen().includes("/an claude oder codex"), "Prompt fertig");
+  repl.input.write("/an claude\r");
+  await until(() => repl.screen().includes("nur in einem echten Terminal"), "abgelehnt");
+  assert.equal(runs.length, 0);
+  repl.input.write(CTRL_C);
   await repl.finished;
 });
