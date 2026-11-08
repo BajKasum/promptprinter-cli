@@ -58,7 +58,7 @@ const mutations = [
   ["src/account.mjs", "Mailadresse unbereinigt", 'sanitize(String(me.email ?? "?"))', 'String(me.email ?? "?")'],
   ["src/account.mjs", "Abmelden behält die Datei", "await store.clear();\n  return result;", "return result;"],
   ["src/cli.mjs", "Pipe wartet auf den Browser", 'if (!term.isTTY) {\n      say(t("loginRequired"));\n      return 1;\n    }', ""],
-  ["src/agents.mjs", "/an über eine Shell", "shell: false", "shell: true"],
+  ["src/agents.mjs", "/an über eine Shell", "{ stdio, cwd, env, shell: false,", "{ stdio, cwd, env, shell: true,"],
   ["src/agents.mjs", "/an startet die .cmd-Datei selbst", 'if (platform === "win32" && (ext === ".cmd" || ext === ".bat")) {', "if (false) {"],
   ["src/agents.mjs", "/an ohne -- vor dem Prompt", 'args: [target, "--", prompt]', "args: [target, prompt]"],
   ["src/agents.mjs", "/an: Shim-Ziel ausserhalb seines Ordners", 'if (!inside || inside.startsWith("..") || isAbsolute(inside)) return null;', ""],
