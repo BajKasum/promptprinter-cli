@@ -66,6 +66,24 @@ export async function startStub(overrides = {}) {
       if (!state.validTokens.has(token)) return send(401, { kind: "unauthorized", detail: "no" });
       return send(200, state.me);
     }
+    if (req.url.startsWith("/api/cli/prompts")) {
+      if (!state.validTokens.has(token)) return send(401, { kind: "unauthorized", detail: "no" });
+      if (state.promptsStatus) return send(state.promptsStatus, state.promptsBody ?? {});
+      const url = new URL(req.url, "http://stub");
+      const id = url.pathname.slice("/api/cli/prompts/".length);
+      const all = state.prompts ?? [];
+      if (url.pathname.startsWith("/api/cli/prompts/")) {
+        const found = all.find((p) => p.id === decodeURIComponent(id));
+        return found ? send(200, found) : send(404, { kind: "notFound", detail: "nicht gefunden" });
+      }
+      const q = (url.searchParams.get("q") ?? "").toLowerCase();
+      const limit = Number(url.searchParams.get("limit") ?? 20);
+      const prompts = all
+        .filter((p) => !q || `${p.title} ${p.content}`.toLowerCase().includes(q))
+        .slice(0, limit)
+        .map(({ id: pid, title, createdAt, content }) => ({ id: pid, title, createdAt, preview: content.slice(0, 200) }));
+      return send(200, { prompts });
+    }
     if (req.url === "/api/chat") {
       if (!state.validTokens.has(token)) return send(401, { detail: "Bitte anmelden." });
       const turn = state.chat.shift();

@@ -22,6 +22,9 @@ const FILES = [
   "src/app/api/cli/refresh/route.ts",
   "src/app/api/cli/logout/route.ts",
   "src/app/api/cli/me/route.ts",
+  "src/app/api/cli/prompts/route.ts",
+  "src/app/api/cli/prompts/[id]/route.ts",
+  "src/server/cli-login/saved-prompts.ts",
   "src/server/cli-login/messages.ts",
 ];
 

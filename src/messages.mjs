@@ -20,6 +20,7 @@ const MESSAGES = {
   login          dieses Gerät anmelden
   logout         dieses Gerät abmelden
   whoami         Konto, Plan und Key anzeigen
+  mcp            MCP-Server über stdio (für Claude Code, Claude Desktop, ...)
   --version      Version anzeigen
   --help         diese Hilfe`,
     disclosure: "Finn ist eine KI und kann Fehler machen. Prüf wichtige Angaben selbst.",
@@ -51,6 +52,19 @@ const MESSAGES = {
     kontextYes: "j",
     kontextCancelled: "Nichts gesendet.",
     newChat: "Neues Gespräch.",
+    mcpLogin: "Nicht angemeldet. Starte einmal `promptprinter` im Terminal und melde dich an, dann geht es hier weiter.",
+    mcpIdeaMissing: "Die Idee fehlt (Feld idea).",
+    mcpUnknownConversation:
+      "Diese conversation_id kennt dieser Server nicht (mehr). Starte mit create_prompt ohne conversation_id neu und nenne die Idee samt Antwort.",
+    mcpPromptNote: "Fertiger Prompt von Finn (PromptPrinter). conversation_id: {id}",
+    mcpQuestionNote:
+      "Finn fragt nach. Zeig die Frage dem Nutzer und ruf create_prompt mit seiner Antwort als idea und conversation_id {id} auf.",
+    mcpBadQuery: "query darf höchstens {max} Zeichen haben.",
+    mcpBadLimit: "limit muss eine ganze Zahl von 1 bis 50 sein.",
+    mcpNoSaved: "Keine gespeicherten Prompts gefunden.",
+    mcpBadId: "Das ist keine gültige id. Nimm eine id aus list_saved_prompts.",
+    mcpNotFound: "Diesen gespeicherten Prompt gibt es nicht (oder nicht in diesem Konto).",
+    mcpReady: "PromptPrinter MCP-Server läuft (stdio). Er wartet auf einen MCP-Client; beenden mit Strg+C.",
     anUsage: "Schreib, an wen: /an claude oder /an codex",
     anNoTerminal: "/an startet {name} in diesem Terminal und geht deshalb nur in einem echten Terminal, nicht aus einer Pipe.",
     anTooLong: "Der Prompt ist zu lang für eine Befehlszeile unter Windows. /copy kopiert ihn, dann in {name} einfügen.",
@@ -123,6 +137,7 @@ const MESSAGES = {
   login          sign this device in
   logout         sign this device out
   whoami         show account, plan and key
+  mcp            MCP server over stdio (for Claude Code, Claude Desktop, ...)
   --version      show the version
   --help         this help`,
     disclosure: "Finn is an AI and can make mistakes. Double-check important details.",
@@ -154,6 +169,19 @@ const MESSAGES = {
     kontextYes: "y",
     kontextCancelled: "Nothing sent.",
     newChat: "New conversation.",
+    mcpLogin: "Not signed in. Run `promptprinter` once in a terminal and sign in, then try again.",
+    mcpIdeaMissing: "The idea is missing (field idea).",
+    mcpUnknownConversation:
+      "This server does not know that conversation_id (anymore). Start again with create_prompt without conversation_id and include the idea and the answer.",
+    mcpPromptNote: "Finished prompt by Finn (PromptPrinter). conversation_id: {id}",
+    mcpQuestionNote:
+      "Finn asks a question. Show it to the user and call create_prompt with their answer as idea and conversation_id {id}.",
+    mcpBadQuery: "query can have at most {max} characters.",
+    mcpBadLimit: "limit must be a whole number from 1 to 50.",
+    mcpNoSaved: "No saved prompts found.",
+    mcpBadId: "That is not a valid id. Use an id from list_saved_prompts.",
+    mcpNotFound: "This saved prompt does not exist (or not in this account).",
+    mcpReady: "PromptPrinter MCP server running (stdio). It waits for an MCP client; quit with Ctrl+C.",
     anUsage: "Say to whom: /an claude or /an codex",
     anNoTerminal: "/an starts {name} in this terminal, so it only works in a real terminal, not from a pipe.",
     anTooLong: "The prompt is too long for a command line on Windows. /copy copies it, then paste it into {name}.",

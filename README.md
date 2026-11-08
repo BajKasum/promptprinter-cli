@@ -71,7 +71,42 @@ From the second version on, each one is published from GitHub Actions with [prov
 
 Anything else you type goes to Finn. `Ctrl+C` stops a running reply; at the empty prompt it quits.
 
-From the shell: `promptprinter login`, `logout`, `whoami`, `--version`, `--help`.
+From the shell: `promptprinter login`, `logout`, `whoami`, `mcp`, `--version`, `--help`.
+
+## MCP: PromptPrinter inside Claude Code, Claude Desktop and other MCP clients
+
+`promptprinter mcp` is an MCP server over stdio. It has three tools:
+
+| Tool | |
+|---|---|
+| `create_prompt` | sends an idea to Finn; returns Finn's question or the finished prompt, with a `conversation_id` to answer the question |
+| `list_saved_prompts` | your saved prompts, newest first; optional `query` and `limit` (1 to 50) |
+| `get_saved_prompt` | one saved prompt by `id` |
+
+It never signs in by itself: run `promptprinter` once in a terminal and sign in, the MCP server then uses that sign-in (and renews it). Without it, every tool answers "run `promptprinter` once and sign in". Conversations started through MCP are stored in your account like any chat.
+
+From source, register it with the full path to this folder:
+
+```bash
+claude mcp add promptprinter -- node /path/to/promptprinter-cli/bin/promptprinter.mjs mcp
+```
+
+<!-- Ab der ersten Veröffentlichung sichtbar machen und den Satz "From source" samt Befehl oben ersetzen (CLAUDE.md, "Veröffentlichung"):
+
+Claude Code:
+
+```bash
+claude mcp add promptprinter -- npx -y promptprinter mcp
+```
+
+Claude Desktop, in `claude_desktop_config.json`:
+
+```json
+{"mcpServers":{"promptprinter":{"command":"npx","args":["-y","promptprinter","mcp"]}}}
+```
+-->
+
+The server speaks MCP `2026-07-28` (per-request metadata, `server/discover`) and, for clients that still start with `initialize`, `2025-11-25`, `2025-06-18` and `2025-03-26`. stdout carries only protocol messages.
 
 ## What it stores and sends
 
