@@ -14,7 +14,7 @@ Gegenwart, keine Historie.
 - **`/an claude`, `/an codex` gebaut:** startet den Agenten im selben Terminal, der Prompt ist ein eigenes Argument nach `--`. Nie über eine Shell; unter Windows wird die `.cmd`-Datei von npm zu ihrem Skript aufgelöst, eine unbekannte Form wird nicht gestartet.
 - **MCP gebaut:** `promptprinter mcp` (stdio, MCP 2026-07-28 und die älteren Versionen mit `initialize`), Werkzeuge `create_prompt`, `list_saved_prompts`, `get_saved_prompt`. Nutzt die gespeicherte Anmeldung, meldet nie selbst an. Die Liste kommt von `GET /api/cli/prompts` und `/api/cli/prompts/[id]` im Haupt-Repo; der Verlauf einer Rückfrage liegt im Speicher des Prozesses, unter der `conversation_id`.
 - **Phase 3 gebaut:** `/pp --kontext <Idee>`. `src/context.mjs` ist eine Kopie aus `promptprinter-pp` (Herkunft im Kopf, Pin `contract/context-pin.json`; `test/context.test.mjs` und `npm run contract` melden Abweichungen), `src/project-context.mjs` baut daraus die Nachricht: höchstens 8000 Zeichen, gekürzt wird nur der Kontext. Vorschau mit Empfänger und Hinweis auf den Chat-Verlauf, nur ein getipptes `j` sendet, aus einer Pipe nie.
-- **Phase 4 offen:** Veröffentlichung auf npm. `"private": true` in `package.json` verhindert sie bis dahin. Voraussetzung: Kasums Ja und sein npm-Konto.
+- **Phase 4 vorbereitet:** Version 0.2.0, `"private"` ist entfernt (Kasums Auftrag vom 08.11.2026). Veröffentlicht ist nichts; das kann nur Kasum mit seinem npm-Konto, die erste Version von Hand.
 
 ## Aufbau
 
@@ -70,7 +70,7 @@ Zwei Repos, kein gemeinsamer Code. Das Haupt-Repo ist "alle Rechte vorbehalten",
 
 ## Veröffentlichung
 
-Vorbereitet, nicht veröffentlicht. `"private": true` bleibt, bis Kasum Ja sagt; npm lehnt solange jedes `publish` ab.
+Vorbereitet, nicht veröffentlicht. Seit 0.2.0 steht kein `"private"` mehr in `package.json`: ein `npm publish` mit Kasums Konto ginge durch. Deshalb hier nie `npm publish`, `npm login` oder einen Tag `v*` ausführen; das ist Kasums Schritt.
 
 - **Paketinhalt:** `"files"` lässt nur `bin`, `src`, `LICENSE`, `README.md` und `package.json` hinein, `test/package.test.mjs` fragt dazu `npm pack --dry-run`. npm lässt eine `.env` in diesen Ordnern nicht von sich aus weg, der Test schlägt dann an.
 - **Weg:** `.github/workflows/release.yml` läuft nur auf einen Tag `vX.Y.Z` (Tag gleich Version, Commit auf `main`), meldet sich per Trusted Publishing an und veröffentlicht mit Provenance. Kein npm-Token im Repo, `test/release-workflow.test.mjs` hält beides fest.

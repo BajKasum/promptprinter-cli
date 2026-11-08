@@ -3,7 +3,7 @@ name: Veröffentlichen
 # Veröffentlicht nie von selbst: nur ein Tag vX.Y.Z startet ihn, und Tags setzt Kasum von Hand. Angemeldet wird per
 # Trusted Publishing (OIDC): kein npm-Token im Repo, npm hängt die Provenance selbst an. Das setzt voraus, dass das
 # Paket schon existiert und auf npmjs.com diesen Workflow als Trusted Publisher kennt; die erste Version geht deshalb
-# von Hand hinaus (CLAUDE.md, "Veröffentlichung"). Solange package.json "private": true sagt, lehnt npm ohnehin ab.
+# von Hand hinaus (CLAUDE.md, "Veröffentlichung").
 on:
   push:
     tags: ["v*.*.*"]

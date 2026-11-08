@@ -1,7 +1,6 @@
 {
   "name": "promptprinter",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.2.0",
   "description": "PromptPrinter in your terminal: tell Finn what you want, get one finished prompt for any AI.",
   "license": "MIT",
   "author": "Kasum Bajrami",
