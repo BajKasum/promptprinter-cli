@@ -12,6 +12,7 @@ Gegenwart, keine Historie.
 
 - **Phase 2 gebaut:** Startbild, `login`, `logout`, `whoami`, Chat, `/pp <Idee>`, `/new`, `/copy`, `/save`.
 - **`/an claude`, `/an codex` gebaut:** startet den Agenten im selben Terminal, der Prompt ist ein eigenes Argument nach `--`. Nie über eine Shell; unter Windows wird die `.cmd`-Datei von npm zu ihrem Skript aufgelöst, eine unbekannte Form wird nicht gestartet.
+- **MCP gebaut:** `promptprinter mcp` (stdio, MCP 2026-07-28 und die älteren Versionen mit `initialize`), Werkzeuge `create_prompt`, `list_saved_prompts`, `get_saved_prompt`. Nutzt die gespeicherte Anmeldung, meldet nie selbst an. Die Liste kommt von `GET /api/cli/prompts` und `/api/cli/prompts/[id]` im Haupt-Repo; der Verlauf einer Rückfrage liegt im Speicher des Prozesses, unter der `conversation_id`.
 - **Phase 3 gebaut:** `/pp --kontext <Idee>`. `src/context.mjs` ist eine Kopie aus `promptprinter-pp` (Herkunft im Kopf, Pin `contract/context-pin.json`; `test/context.test.mjs` und `npm run contract` melden Abweichungen), `src/project-context.mjs` baut daraus die Nachricht: höchstens 8000 Zeichen, gekürzt wird nur der Kontext. Vorschau mit Empfänger und Hinweis auf den Chat-Verlauf, nur ein getipptes `j` sendet, aus einer Pipe nie.
 - **Phase 4 offen:** Veröffentlichung auf npm. `"private": true` in `package.json` verhindert sie bis dahin. Voraussetzung: Kasums Ja und sein npm-Konto.
 
@@ -32,6 +33,7 @@ Node 22 oder neuer, ESM, **keine Laufzeit-Abhängigkeiten**.
 | `src/render.mjs` | Antwort zeichnen, Blöcke rahmen |
 | `src/text.mjs` | Steuerzeichen entfernen, umbrechen |
 | `src/system.mjs` | Zwischenablage, Datei, Browser |
+| `src/mcp.mjs` | `promptprinter mcp`: MCP-Server über stdio, Werkzeuge |
 | `src/agents.mjs` | `/an claude`, `/an codex`: Agent finden und ohne Shell starten |
 | `src/messages.mjs` | Texte, deutsch und englisch |
 
@@ -50,7 +52,7 @@ Zwei Repos, kein gemeinsamer Code. Das Haupt-Repo ist "alle Rechte vorbehalten",
 | Quelle im Haupt-Repo | Wird hier |
 |---|---|
 | `src/shared/lib/chat-stream.ts` | `src/sse.mjs` |
-| `src/app/api/cli/*/route.ts` | `src/api.mjs`, `src/login.mjs` |
+| `src/app/api/cli/*/route.ts` | `src/api.mjs`, `src/login.mjs`, `src/mcp.mjs` (gespeicherte Prompts) |
 | `src/shared/lib/chat-limits.ts` | `src/chat.mjs` |
 | `extractPrompt` in `src/shared/lib/saved-prompts.ts` | `src/extract-prompt.mjs` |
 | `normalizeFences` | `src/render.mjs` |

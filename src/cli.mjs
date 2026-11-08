@@ -5,6 +5,7 @@ import { banner } from "./banner.mjs";
 import { ConfigError, configDir, serverUrl } from "./config.mjs";
 import { describeError } from "./errors.mjs";
 import { runLogin } from "./login.mjs";
+import { createMcpServer, serveStdio } from "./mcp.mjs";
 import { detectLang, translator } from "./messages.mjs";
 import { runRepl } from "./repl.mjs";
 import { createAuth, createSessionStore, NotLoggedInError } from "./session.mjs";
@@ -13,7 +14,10 @@ import { detectTerminal } from "./terminal.mjs";
 
 const VERSION = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
 
-export async function main(argv, { env = process.env, input = process.stdin, output = process.stdout } = {}) {
+export async function main(
+  argv,
+  { env = process.env, input = process.stdin, output = process.stdout, errors = process.stderr } = {}
+) {
   const t = translator(detectLang(env));
   const say = (text) => output.write(`${text}\n`);
 
@@ -87,6 +91,21 @@ export async function main(argv, { env = process.env, input = process.stdin, out
     const { line, hints } = describeAccount(me, { t, server });
     say(term.dim(line));
     for (const hint of hints) say(hint);
+  }
+
+  // MCP: stdout gehört dem Protokoll. Kein Startbild, keine Anmeldung, Meldungen nur nach stderr.
+  if (command === "mcp") {
+    if (extra.length > 0) {
+      say(t("usage"));
+      return 2;
+    }
+    const log = (text) => errors.write(`promptprinter mcp: ${text}
+`);
+    if (input.isTTY) errors.write(`${t("mcpReady")}
+`);
+    const server = createMcpServer({ api, auth, t, version: VERSION, log });
+    await serveStdio({ input, output, server, log });
+    return 0;
   }
 
   if (command === "login") return (await login()) ? 0 : 1;

@@ -9,5 +9,8 @@
   "src/app/api/cli/refresh/route.ts": "1719a9cb3b55299e8230a0bb2cc2d94fc4e7fe81ca5b0203e4d24abd455abb23",
   "src/app/api/cli/logout/route.ts": "ed1dd1677615271f41a975cfeefca85e31db2c2cc585b7a14eb9090ec324e13e",
   "src/app/api/cli/me/route.ts": "0b3c290ba222d6babad4fdaf83fa51dbef43e86e321c10a8981ddde7f6c044ae",
-  "src/server/cli-login/messages.ts": "4c544787196f671ec7810359a6405a5c4848453a1e2fb216ed017dbd81604ec0"
+  "src/app/api/cli/prompts/route.ts": "a6b76962ac1dc80707db0c250416e3724c45493c3e5addeba33844eeb3edfc8c",
+  "src/app/api/cli/prompts/[id]/route.ts": "2d11c6678af9a92267f59a448a542f04e809780d40a40e462407e669c0c384e0",
+  "src/server/cli-login/saved-prompts.ts": "cf84e5033c199c0b7633e0f45b951a81ca7e31e189e06c3318d1ad564a7f582b",
+  "src/server/cli-login/messages.ts": "aef3577a2d1db316f5b2a5d66025fda0e8a3d6e9b5c9cbebd30a54695c2ba0cd"
 }

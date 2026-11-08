@@ -60,6 +60,13 @@ export function createApi({ server, version, lang, fetch: doFetch = globalThis.f
     refresh: (refreshToken) => json("POST", "/api/cli/refresh", { body: { refreshToken } }),
     logout: (token) => json("POST", "/api/cli/logout", { token }),
     me: (token) => json("GET", "/api/cli/me", { token }),
+    /** Gespeicherte Prompts, neueste zuerst (für den MCP-Server). */
+    savedPrompts: (token, { query = "", limit = 20 } = {}) => {
+      const params = new URLSearchParams({ limit: String(limit) });
+      if (query) params.set("q", query);
+      return json("GET", `/api/cli/prompts?${params}`, { token });
+    },
+    savedPrompt: (token, id) => json("GET", `/api/cli/prompts/${encodeURIComponent(id)}`, { token }),
     /** Gibt die Antwort mit offenem Strom zurück. Eine Absage wirft, bevor ein Wort gelesen wird. */
     async chat(token, body, signal) {
       const res = await send("POST", "/api/chat", { token, body, signal });
